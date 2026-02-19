@@ -1,51 +1,68 @@
-import {
-  useEffect,
-  useState
-} from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
-import { HubConnectionBuilder } from '@microsoft/signalr';
-import lockOpen from './assets/lock-open.svg'
-import lockClosed from './assets/lock-closed.svg'
 
-type GarageOpenedFunction = (x: number) => void;
-
-const App = () => {
-  const [garageOpened, setGarageOpened] = useState<number>(0);
-
-  useEffect(() => {
-    fetchCurrentState(setGarageOpened);
-    connectToSignalR(setGarageOpened);
-  }, []);
-
-  return (
-    <>
-      <div>
-        <img src={garageOpened ? lockOpen : lockClosed} alt={garageOpened ? "Open" : "Closed"} />
-        <h3>{garageOpened ? "Opened" : "Closed"}</h3>
-      </div>
-    </>
-  )
-};
-
-const fetchCurrentState = (setGarageOpened: GarageOpenedFunction) => {
-  fetch('https://temp-zlatkov.azurewebsites.net/proximity')
-    .then(res => res.json())
-    .then(json => setGarageOpened(json.proximity));
+interface GarageData {
+  temp: number
+  proximity: number
 }
 
-const connectToSignalR = (setGarageOpened: GarageOpenedFunction) => {
-  let connection = new HubConnectionBuilder()
-    .withUrl("https://temp-zlatkov.azurewebsites.net/signalr-hub")
-    .withAutomaticReconnect()
-    .build();
+const API_URL = 'http://84.47.36.56:7226/'
+const POLL_INTERVAL = 5000
 
-  connection.on("sendProximity", data => {
-    setGarageOpened(data.proximity);
-  });
+const App = () => {
+  const [data, setData] = useState<GarageData | null>(null)
+  const [error, setError] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
 
-  connection.start()
-    .then(() => console.log('SignalR Connected'))
-    .catch(err => console.error('SignalR Connection Error: ', err))
+  useEffect(() => {
+    const fetchData = () => {
+      fetch(API_URL)
+        .then(res => res.json())
+        .then((json: GarageData) => {
+          setData(json)
+          setError(false)
+          setLastUpdated(new Date())
+        })
+        .catch(() => setError(true))
+    }
+
+    fetchData()
+    const interval = setInterval(fetchData, POLL_INTERVAL)
+    return () => clearInterval(interval)
+  }, [])
+
+  const isClosed = data?.proximity === 1
+  const temp = data?.temp
+
+  return (
+    <div className="container">
+      <h1 className="title">Garage</h1>
+
+      {error && <p className="error">Unable to connect</p>}
+
+      {data && (
+        <>
+          <div className={`status-card ${isClosed ? 'closed' : 'open'}`}>
+            <div className="status-icon">{isClosed ? '🔒' : '🔓'}</div>
+            <div className="status-label">{isClosed ? 'Closed' : 'Open'}</div>
+          </div>
+
+          <div className="temp-card">
+            <div className="temp-value">{temp?.toFixed(1)}°C</div>
+            <div className="temp-label">Temperature</div>
+          </div>
+
+          {lastUpdated && (
+            <p className="updated">
+              Updated {lastUpdated.toLocaleTimeString()}
+            </p>
+          )}
+        </>
+      )}
+
+      {!data && !error && <p className="loading">Loading...</p>}
+    </div>
+  )
 }
 
 export default App
