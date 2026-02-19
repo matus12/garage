@@ -11,7 +11,7 @@ module.exports = async function (context, req) {
   } catch (err) {
     context.log('Proxy error:', err.message || err);
     context.res = {
-      status: 502,
+      status: 200,
       headers: { 'Content-Type': 'application/json' },
       body: { error: err.message || 'Unable to reach garage sensor' }
     };
