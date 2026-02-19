@@ -1,7 +1,16 @@
+const http = require('http');
+
 module.exports = async function (context) {
   try {
-    const response = await fetch('http://84.47.36.56:7226/');
-    const data = await response.json();
+    const data = await new Promise((resolve, reject) => {
+      http.get('http://84.47.36.56:7226/', (res) => {
+        let body = '';
+        res.on('data', (chunk) => body += chunk);
+        res.on('end', () => resolve(JSON.parse(body)));
+        res.on('error', reject);
+      }).on('error', reject);
+    });
+
     context.res = {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
