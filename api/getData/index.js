@@ -11,7 +11,7 @@ module.exports = async function (context, req) {
   } catch (err) {
     context.log('Proxy error:', err.message || err);
     context.res = {
-      status: 200,
+      status: 502,
       headers: { 'Content-Type': 'application/json' },
       body: { error: err.message || 'Unable to reach garage sensor' }
     };
@@ -20,13 +20,7 @@ module.exports = async function (context, req) {
 
 function fetchData() {
   return new Promise(function (resolve, reject) {
-    var req = http.request({
-      hostname: '84.47.36.56',
-      port: 7226,
-      path: '/',
-      method: 'GET',
-      timeout: 8000
-    }, function (res) {
+    var req = http.get('http://84.47.36.56/', function (res) {
       var body = '';
       res.on('data', function (chunk) { body += chunk; });
       res.on('end', function () {

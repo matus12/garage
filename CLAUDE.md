@@ -19,7 +19,7 @@ npm run lint       # Run ESLint on all files
 ## Architecture
 
 ### Data Source
-- **API**: `http://84.47.36.56:7226/` returns JSON `{ "temp": number, "proximity": number }`
+- **API**: `http://84.47.36.56/` returns JSON `{ "temp": number, "proximity": number }`
 - `proximity`: 1 = garage door closed, 0 = garage door open
 - `temp`: temperature in °C
 - Data is polled every 5 seconds
