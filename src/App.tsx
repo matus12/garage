@@ -6,7 +6,7 @@ interface GarageData {
   proximity: number
 }
 
-const API_URL = 'http://84.47.36.56:7226/'
+const API_URL = '/api/data'
 const POLL_INTERVAL = 5000
 
 const App = () => {
